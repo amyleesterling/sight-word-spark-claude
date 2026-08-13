@@ -54,6 +54,10 @@ no streaks to lose, no timers, no scarcity tricks, and nothing to buy.
   memory live in `localStorage` under an explicit schema version with
   defensive migration — refreshing, reopening, or updating the game never
   wipes a collection.
+- **Backup codes**: because `localStorage` is scoped to one browser and one
+  web address, the gallery offers a pasteable code that carries a collection
+  to another phone, browser, or link. Restoring merges — it can only add
+  creatures, never remove them.
 - Touch-first with large targets, full keyboard play (1–4 to answer, R to
   replay), responsive layout, and `prefers-reduced-motion` support.
 

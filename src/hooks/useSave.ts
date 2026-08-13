@@ -57,5 +57,15 @@ export function useSave() {
     setSave((s) => ({ ...s, customWords: words }));
   }, []);
 
-  return { save, awardCreature, recordTrailComplete, recordWordSeen, setCustomWords };
+  /** Used by backup restore; the merge itself happens in game/backup.ts. */
+  const replaceSave = useCallback((next: SaveData) => setSave(next), []);
+
+  return {
+    save,
+    awardCreature,
+    recordTrailComplete,
+    recordWordSeen,
+    setCustomWords,
+    replaceSave,
+  };
 }

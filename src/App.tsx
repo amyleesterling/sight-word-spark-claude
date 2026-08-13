@@ -33,7 +33,14 @@ function distractorPool(levelId: number | null, pool: WordEntry[]): WordEntry[] 
 }
 
 export function App() {
-  const { save, awardCreature, recordTrailComplete, recordWordSeen, setCustomWords } = useSave();
+  const {
+    save,
+    awardCreature,
+    recordTrailComplete,
+    recordWordSeen,
+    setCustomWords,
+    replaceSave,
+  } = useSave();
   const [screen, setScreen] = useState<Screen>({ kind: "home" });
 
   const goHome = useCallback(() => setScreen({ kind: "home" }), []);
@@ -107,7 +114,14 @@ export function App() {
         />
       );
     case "gallery":
-      return <GalleryScreen collection={save.collection} onBack={goHome} />;
+      return (
+        <GalleryScreen
+          collection={save.collection}
+          save={save}
+          onRestore={replaceSave}
+          onBack={goHome}
+        />
+      );
     case "custom":
       return (
         <CustomWordsScreen
