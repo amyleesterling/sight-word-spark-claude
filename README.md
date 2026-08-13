@@ -14,9 +14,9 @@ lives at https://sight-word-spark.amysterling.chatgpt.site
 Every trail starts by showing the prize: *"Find 6 words to crack this egg and
 meet them."* Each correct answer visibly cracks the egg; the trail takes about
 2–3 minutes and always ends in a hatch. The reveal is a named collectible
-(Emberly the Spark Fox, Doodle the Ink Octo, …) saved permanently on the
-device. The gallery shows discovered friends in color, mysteries as
-silhouettes, and progress like **4 of 12**. No duplicates are awarded until
+(Twig the Forest Dragon, Comet the Rainbow Unicorn, …) saved permanently on
+the device. The gallery shows discovered friends in color, mysteries as
+silhouettes, and progress like **3 of 7**. No duplicates are awarded until
 the whole first set is found; completing it unlocks a second set. There are
 no streaks to lose, no timers, no scarcity tricks, and nothing to buy.
 
@@ -25,11 +25,13 @@ no streaks to lose, no timers, no scarcity tricks, and nothing to buy.
 - **200 Fry instant words** in 8 levels of 25. The first hundred (levels 1–4)
   is open from the start; levels 5–8 unlock one at a time by hatching an egg
   in the previous level.
-- **24 collectible creatures** in two sets. The whole first collection is
-  painted artwork (in `src/assets/creatures/`, shipped as 512px WebP), and
-  each creature's mystery egg is coloured to match the shell in its own
-  painting. Set 2 is still part placeholder SVG; painted creatures are always
-  offered first, and adding art is one line in `src/game/creatures.ts`.
+- **14 collectible creatures**, every one a painted portrait (in
+  `src/assets/creatures/`, shipped as 512px WebP): seven woodland friends in
+  the Hatchling Grove, then seven starlight ones in the Shimmer Sky. Each
+  creature's mystery egg is coloured to match the shell in its own painting,
+  so the egg foreshadows the reveal, and undiscovered creatures appear as
+  silhouettes of their real artwork. Adding one is a single line in
+  `src/game/creatures.ts`.
 - **A voice that just works.** Over 600 words ship as recorded audio in
   `public/voice/` — every level word plus a wide "My Words" vocabulary
   (common nouns, verbs, days, animals, first names) — all recorded once in

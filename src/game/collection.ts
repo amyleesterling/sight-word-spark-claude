@@ -22,9 +22,6 @@ export function activeSet(collection: CollectedCreature[]): 1 | 2 {
  * Pick the creature hiding in the next egg.
  * Undiscovered creatures from the active set only; when both full sets are
  * complete, any creature may hatch again (a friendly encore, never a loss).
- *
- * Painted creatures come first while the rest of the collection is still
- * placeholder art, so the earliest hatches are the most delightful ones.
  */
 export function pickNextCreature(
   collection: CollectedCreature[],
@@ -33,8 +30,7 @@ export function pickNextCreature(
   const found = discoveredIds(collection);
   const set = activeSet(collection);
   const remaining = creaturesInSet(set).filter((c) => !found.has(c.id));
-  const painted = remaining.filter((c) => c.image);
-  const pool = painted.length > 0 ? painted : remaining.length > 0 ? remaining : CREATURES;
+  const pool = remaining.length > 0 ? remaining : CREATURES;
   return pool[Math.floor(random() * pool.length)];
 }
 
