@@ -62,15 +62,13 @@ jobs:
           git commit -q -m "Deploy ${GITHUB_SHA::7}"
           git push -q origin gh-pages
           echo "Published $(git rev-parse --short HEAD) to gh-pages"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify the deploy actually landed
         run: |
           set -euo pipefail
           published=$(git -C .deploy rev-parse HEAD)
           remote_head=$(git ls-remote "https://github.com/${GITHUB_REPOSITORY}.git" gh-pages | cut -f1)
-          echo "local $published / remote $remote_head"
+          echo "published $published / remote $remote_head"
           test "$published" = "$remote_head"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
