@@ -2,6 +2,11 @@
 // set 2 ("Shimmer Sky") opens once every Grove creature has been discovered, so
 // there is no duplicate hatch until the whole first collection is complete.
 
+import twigArt from "../assets/creatures/twig.webp";
+import pebbleArt from "../assets/creatures/pebble.webp";
+import puddleArt from "../assets/creatures/puddle.webp";
+import zippyArt from "../assets/creatures/zippy.webp";
+
 export type BodyKind =
   | "blob"
   | "fox"
@@ -41,6 +46,12 @@ export interface CreatureSpec {
     shell: string;
     speckle: string;
   };
+  /**
+   * Painted portrait. When present it is shown instead of the generated SVG,
+   * and the egg colors are matched to the shell in the artwork so the mystery
+   * egg foreshadows the creature inside.
+   */
+  image?: string;
 }
 
 const c = (
@@ -52,16 +63,17 @@ const c = (
   feature: Feature,
   palette: CreatureSpec["palette"],
   egg: CreatureSpec["egg"],
-): CreatureSpec => ({ id, name, species, set, body, feature, palette, egg });
+  image?: string,
+): CreatureSpec => ({ id, name, species, set, body, feature, palette, egg, image });
 
 export const CREATURES: CreatureSpec[] = [
   // ----- Set 1: Hatchling Grove -----
   c("emberly", "Emberly", "the Spark Fox", 1, "fox", "flame",
     { body: "#ff8a5c", belly: "#ffe3c2", accent: "#ff5c39", cheek: "#ffb199" },
     { shell: "#ffd9a0", speckle: "#ff8a5c" }),
-  c("puddle", "Puddle", "the Rain Sprite", 1, "blob", "antenna",
-    { body: "#63c5ff", belly: "#dff4ff", accent: "#2f9be0", cheek: "#a8e0ff" },
-    { shell: "#c9ecff", speckle: "#63c5ff" }),
+  c("puddle", "Puddle", "the Axolotl", 1, "blob", "antenna",
+    { body: "#f7a8b0", belly: "#ffe6e4", accent: "#e8677f", cheek: "#ffc4c8" },
+    { shell: "#f7efe2", speckle: "#dcc39b" }, puddleArt),
   c("bloom", "Bloom", "the Petal Bunny", 1, "bunny", "leaf",
     { body: "#ff9ec8", belly: "#ffe8f2", accent: "#e0619b", cheek: "#ffc2dc" },
     { shell: "#ffe0ee", speckle: "#ff9ec8" }),
@@ -71,12 +83,12 @@ export const CREATURES: CreatureSpec[] = [
   c("glimmer", "Glimmer", "the Moon Moth", 1, "blob", "wings",
     { body: "#b8e2b0", belly: "#eefbe9", accent: "#6cae61", cheek: "#d6f0cf" },
     { shell: "#e4f6de", speckle: "#8fc985" }),
-  c("pebble", "Pebble", "the Cave Turtle", 1, "turtle", "crystal",
-    { body: "#9fb8c8", belly: "#e6eef4", accent: "#5d7f96", cheek: "#c3d5e0" },
-    { shell: "#dbe7ee", speckle: "#9fb8c8" }),
-  c("zippy", "Zippy", "the Thunder Chick", 1, "bird", "star",
-    { body: "#ffd15c", belly: "#fff3d0", accent: "#f0a500", cheek: "#ffe4a0" },
-    { shell: "#fff0c2", speckle: "#ffc93d" }),
+  c("pebble", "Pebble", "the Star Turtle", 1, "turtle", "star",
+    { body: "#5ecfc4", belly: "#f0f3d8", accent: "#2b3f8f", cheek: "#ffb3b3" },
+    { shell: "#e8e2f7", speckle: "#c9bce8" }, pebbleArt),
+  c("zippy", "Zippy", "the Baby Griffin", 1, "bird", "wings",
+    { body: "#f5c624", belly: "#fff6e0", accent: "#e09a1e", cheek: "#ffe0a8" },
+    { shell: "#f5eddc", speckle: "#b09a7a" }, zippyArt),
   c("minty", "Minty", "the Frost Kit", 1, "cat", "crystal",
     { body: "#8fe6d9", belly: "#e4fbf7", accent: "#3fbfa9", cheek: "#c2f2ea" },
     { shell: "#d8f8f2", speckle: "#8fe6d9" }),
@@ -87,8 +99,8 @@ export const CREATURES: CreatureSpec[] = [
     { body: "#ffc79e", belly: "#fff1e4", accent: "#e89a5c", cheek: "#ffdec4" },
     { shell: "#ffe9d6", speckle: "#ffc79e" }),
   c("twig", "Twig", "the Forest Dragon", 1, "dragon", "leaf",
-    { body: "#8fce7a", belly: "#e8f8e0", accent: "#5a9e46", cheek: "#c0e8b0" },
-    { shell: "#def2d2", speckle: "#8fce7a" }),
+    { body: "#8fce7a", belly: "#e8f8e0", accent: "#f2846a", cheek: "#c0e8b0" },
+    { shell: "#f2efe0", speckle: "#bcd9a8" }, twigArt),
   c("sunny", "Sunny", "the Dawn Bird", 1, "bird", "none",
     { body: "#ff9e7a", belly: "#ffe9de", accent: "#e86a3f", cheek: "#ffc7b0" },
     { shell: "#ffe2d4", speckle: "#ff9e7a" }),

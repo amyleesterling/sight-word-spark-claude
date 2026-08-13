@@ -57,7 +57,22 @@ describe("collection", () => {
   });
 
   it("is deterministic with an injected random source", () => {
-    const first = pickNextCreature([], () => 0);
-    expect(first.id).toBe(creaturesInSet(1)[0].id);
+    const firstPainted = creaturesInSet(1).find((c) => c.image);
+    expect(pickNextCreature([], () => 0).id).toBe(firstPainted?.id);
+  });
+});
+
+describe("painted creatures", () => {
+  it("hatch before the placeholder-art ones", () => {
+    const paintedIds = creaturesInSet(1).filter((c) => c.image).map((c) => c.id);
+    expect(paintedIds.length).toBeGreaterThan(0);
+    let collection: CollectedCreature[] = [];
+    for (let i = 0; i < paintedIds.length; i++) {
+      const next = pickNextCreature(collection);
+      expect(next.image, `hatch ${i + 1} should be painted art`).toBeTruthy();
+      collection = [...collection, { id: next.id, discoveredAt: i }];
+    }
+    // Once the painted ones are all found, the rest of the set follows.
+    expect(pickNextCreature(collection).set).toBe(1);
   });
 });

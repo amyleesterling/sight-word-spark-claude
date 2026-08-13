@@ -1,6 +1,7 @@
-// Parametric kawaii-style creature renderer. Every collectible is drawn from
-// its CreatureSpec (body kind + feature + palette) so the whole collection has
-// one coherent look. `silhouette` renders the mystery version for the gallery.
+// Creature renderer. Creatures with painted artwork show it directly; the rest
+// are drawn from their CreatureSpec (body kind + feature + palette) so the
+// collection still reads as one set while the art is filled in. `silhouette`
+// renders the mystery version for the gallery, either way.
 
 import type { CreatureSpec } from "../game/creatures";
 
@@ -15,6 +16,22 @@ interface Props {
 const SIL = "#2c2a55";
 
 export function CreatureArt({ spec, silhouette = false, className, label }: Props) {
+  const altText = label ?? (silhouette ? "Mystery creature" : `${spec.name} ${spec.species}`);
+
+  if (spec.image) {
+    return (
+      <img
+        src={spec.image}
+        alt={altText}
+        loading="lazy"
+        decoding="async"
+        className={`object-contain ${className ?? ""}`}
+        // A true silhouette of the painting, so undiscovered art stays a secret.
+        style={silhouette ? { filter: "brightness(0) opacity(0.38)" } : undefined}
+      />
+    );
+  }
+
   const p = silhouette
     ? { body: SIL, belly: SIL, accent: SIL, cheek: SIL }
     : spec.palette;
@@ -24,7 +41,7 @@ export function CreatureArt({ spec, silhouette = false, className, label }: Prop
       viewBox="0 0 120 120"
       className={className}
       role="img"
-      aria-label={label ?? (silhouette ? "Mystery creature" : `${spec.name} ${spec.species}`)}
+      aria-label={altText}
     >
       {/* rear features drawn behind the body */}
       {renderRearFeature(spec, p)}

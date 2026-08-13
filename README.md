@@ -25,8 +25,11 @@ no streaks to lose, no timers, no scarcity tricks, and nothing to buy.
 - **200 Fry instant words** in 8 levels of 25. The first hundred (levels 1–4)
   is open from the start; levels 5–8 unlock one at a time by hatching an egg
   in the previous level.
-- **24 collectible creatures** in two sets, drawn as code (SVG) so the whole
-  collection has one coherent style.
+- **24 collectible creatures** in two sets. Painted creatures use their
+  artwork (in `src/assets/creatures/`, shipped as 512px WebP); the rest are
+  drawn as code (SVG) as placeholders until their art arrives, and painted
+  ones are always offered first. Adding art is one line: drop the file in and
+  pass it to the creature in `src/game/creatures.ts`.
 - **AI reading-teacher voice** via the server-side OpenAI Speech API
   (`gpt-4o-mini-tts`, voice `marin`) — warm, lively, and clear, not
   a robotic browser voice and not exaggerated preschool speech. A small
