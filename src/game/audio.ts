@@ -1,14 +1,13 @@
 // Client audio manager for the voice.
 //
-// The 200 built-in words ship with pre-generated audio in public/voice (see
-// scripts/generate-voice.py), so the game speaks with no key, no cost, no
-// network round trip, and works offline. A grown-up's OpenAI key is an
-// optional upgrade: nicer audio for the built-in words, and the only way to
-// voice custom words. Sources, in order:
-//   1. A grown-up's OpenAI key (localStorage only, sent only to OpenAI), or
-//      the app's own /api/tts endpoint on hosts that have one.
-//   2. The pre-generated audio that ships with the game.
-//   3. This device's built-in speech voice — OFF by default, opt-in only,
+// Words are spoken from recordings that ship with the game in public/voice:
+// every level word plus a wide 'My Words' vocabulary, all in the same voice.
+// That means no API key, no per-play cost, no network round trip, and it
+// works offline. Sources, in order:
+//   1. The shipped recording for the word.
+//   2. The app's own /api/tts endpoint, on hosts that have one.
+//   3. A grown-up's OpenAI key (localStorage only, sent only to OpenAI).
+//   4. This device's built-in speech voice — OFF by default, opt-in only,
 //      because it sounds robotic. The game never falls back to it silently.
 // Failures carry a specific reason so the UI can say what to fix.
 //
@@ -16,7 +15,7 @@
 // next words are preloaded, and one shared <audio> element means a replay tap
 // cancels the previous playback instead of overlapping it.
 
-import { buildOpenAiSpeechRequest, isKnownWord, isValidWord, ttsCacheKey } from "../../shared/tts";
+import { buildOpenAiSpeechRequest, isValidWord, ttsCacheKey } from "../../shared/tts";
 
 export type AudioState = "idle" | "loading" | "playing" | "error";
 
@@ -258,25 +257,21 @@ export class WordAudio {
   }
 
   private async fetchAudio(word: string): Promise<Blob> {
-    const parentKey = getParentVoiceKey();
-
-    if (isKnownWord(word)) {
-      // A configured key buys nicer audio, but shipped audio is the safety net:
-      // a rejected or rate-limited key must never stop the game from speaking.
-      if (parentKey) {
-        try {
-          return await fetchDirectFromOpenAi(word, parentKey);
-        } catch {
-          return this.fetchBakedAudio(word);
-        }
-      }
-      return this.fetchBakedAudio(word);
+    // Shipped recordings first — free, instant, offline, and they cover the
+    // level words plus a wide 'My Words' vocabulary. Everything else is a
+    // fallback for words nobody recorded.
+    try {
+      return await this.fetchBakedAudio(word);
+    } catch {
+      // no recording for this word — fall through to a live voice
     }
 
-    // Custom words have no shipped audio, so they need a live voice.
     const fromServer = await this.fetchFromServer(word);
     if (fromServer) return fromServer;
+
+    const parentKey = getParentVoiceKey();
     if (parentKey) return fetchDirectFromOpenAi(word, parentKey);
+
     throw new VoiceError("no-voice-configured");
   }
 

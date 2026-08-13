@@ -58,6 +58,22 @@ def parse_words() -> tuple[list[str], dict[str, str]]:
     return words, pronunciations
 
 
+def parse_extra(path: pathlib.Path) -> list[str]:
+    """Read the extra 'My Words' vocabulary: one or more words per line, # comments."""
+    words: list[str] = []
+    for line in path.read_text().splitlines():
+        line = line.split("#", 1)[0].strip()
+        words.extend(w for w in line.split() if w.isalpha())
+    # de-duplicate, keep order
+    seen: set[str] = set()
+    unique = []
+    for w in words:
+        if w.lower() not in seen:
+            seen.add(w.lower())
+            unique.append(w)
+    return unique
+
+
 def synthesize(voice: PiperVoice, text: str) -> tuple[int, np.ndarray]:
     buffer = io.BytesIO()
     with wave.open(buffer, "wb") as handle:
@@ -92,9 +108,19 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--voice", required=True, help="path to a piper .onnx voice")
     parser.add_argument("--config", help="path to the .onnx.json (defaults to <voice>.json)")
+    parser.add_argument(
+        "--extra",
+        nargs="?",
+        const=str(ROOT / "scripts" / "extra-vocabulary.txt"),
+        help="generate the extra 'My Words' vocabulary instead of the level words",
+    )
+    parser.add_argument("--force", action="store_true", help="overwrite existing audio")
     args = parser.parse_args()
 
-    words, pronunciations = parse_words()
+    if args.extra:
+        words, pronunciations = parse_extra(pathlib.Path(args.extra)), {}
+    else:
+        words, pronunciations = parse_words()
     if not words:
         raise SystemExit("No words parsed from shared/words.ts")
 
@@ -102,8 +128,14 @@ def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
     total = 0
+    skipped = 0
     suspicious: list[str] = []
     for word in words:
+        # Never clobber existing audio (the level words are recorded with a
+        # premium voice) unless explicitly asked to.
+        if not args.force and (OUT_DIR / f"{word.lower()}.mp3").exists():
+            skipped += 1
+            continue
         spoken = pronunciations.get(word.lower(), word)
         rate, samples = synthesize(voice, spoken)
         samples = trim_silence(samples, rate)
@@ -112,10 +144,13 @@ def main() -> None:
             suspicious.append(word)
         total += encode_mp3(samples, rate, OUT_DIR / f"{word.lower()}.mp3")
 
-    manifest = sorted({w.lower() for w in words})
+    manifest = sorted(p.stem for p in OUT_DIR.glob("*.mp3"))
     (OUT_DIR / "manifest.json").write_text(json.dumps(manifest))
 
-    print(f"{len(words)} words → {OUT_DIR} ({total // 1024} KB total)")
+    print(
+        f"{len(words) - skipped} generated, {skipped} already present "
+        f"→ {OUT_DIR} ({total // 1024} KB written, {len(manifest)} words with audio)"
+    )
     if suspicious:
         print(f"WARNING: suspiciously short audio for: {', '.join(suspicious)}")
 

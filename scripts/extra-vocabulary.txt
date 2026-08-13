@@ -1,0 +1,61 @@
+# Extra words that ship with recorded audio beyond the 200 Fry words.
+#
+# These are not part of any level — they exist so that words a grown-up types
+# into "My Words" (weekly spelling lists, family names) usually already have a
+# recording, instead of needing an API key or the robotic device voice.
+# Generated for free with Piper; see scripts/generate-voice.py --extra.
+#
+# Lines starting with # are ignored. One word per line.
+
+# --- common nouns a first grader reads and spells ---
+apple ball bear bed bird boat book box boy bread brother bus cake car cat
+chair child children city clock coat corn cow cup dad day dog doll door duck
+egg eye farm farmer father feet fire fish floor flower foot game garden girl
+grass ground hand head hill home horse house kitty leg letter man men milk
+money morning mother name nest night paper party picture pig rabbit rain ring
+robin santa school seed sheep shoe sister snow song squirrel stick street sun
+table thing time top toy tree watch water way wind window wood
+
+# --- everyday verbs ---
+add ask bake bring build buy call carry catch clean climb close cook count
+cry cut dance draw drink drive drop eat fall feed feel fill find fix fly
+give grow help hold hop hug jump keep kick kiss knock know laugh learn leave
+let lift like listen live look love make move need open paint pick plant play
+pull push put rain read ride ring run say see sell send show sing sit skate
+sleep slide smile speak spell stand start stay stop swim take talk teach tell
+thank think throw touch try turn understand use wait wake walk want wash
+watch wave wear win wish work write
+
+# --- describing words ---
+angry bad best better big black blue bright brown busy clean cold cool cute
+dark deep dirty dry early easy empty fast few fine first five four friendly
+full funny good great green happy hard heavy high hot hungry kind large last
+late light little long loud low lucky mad many merry new next nice noisy old
+open pink pretty proud purple quick quiet ready red round sad safe short shy
+sick silly six slow small soft sorry sour strong sweet tall ten thick thin
+three tiny tired two ugly warm wet white wild windy wise yellow young
+
+# --- school and calendar ---
+after afternoon always april august autumn birthday class december eight
+eighteen eleven evening february fifteen fifty friday fourteen fourth
+hundred january july june march may minute monday month nine nineteen
+november october pencil recess saturday second september seven seventeen
+sixteen spring summer sunday teacher thirteen thirty thursday today tomorrow
+tuesday twelve twenty wednesday week winter year yesterday
+
+# --- feelings and family ---
+aunt auntie baby cousin family friend grandma grandpa granny mommy daddy
+nana papa parent uncle
+
+# --- animals kids love ---
+bat bee bug bunny butterfly chicken cricket deer dinosaur dolphin dragon
+eagle elephant fox frog giraffe goat goose hen hippo kitten lion lizard
+monkey moose mouse owl panda penguin pony puppy shark sheep snake spider
+tiger turtle whale wolf worm zebra
+
+# --- common first names, so a child can spell their own ---
+aiden alex amy anna ava ben benjamin caleb charlie chloe daniel david ella
+ellie emily emma ethan evelyn grace hannah harper henry isabella jack jackson
+jacob james jane jayden john jonah julia kate leo liam lily logan lucas lucy
+maya mia michael mila noah nora oliver olivia owen penny quinn ruby ryan
+samuel sarah scarlett sophia sophie thomas violet william willow zoe

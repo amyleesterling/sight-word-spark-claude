@@ -30,15 +30,14 @@ no streaks to lose, no timers, no scarcity tricks, and nothing to buy.
   drawn as code (SVG) as placeholders until their art arrives, and painted
   ones are always offered first. Adding art is one line: drop the file in and
   pass it to the creature in `src/game/creatures.ts`.
-- **A voice that just works.** All 200 built-in words ship as recorded
-  audio in `public/voice/` (~730 KB total, one small mp3 per word),
-  synthesised with [Piper](https://github.com/rhasspy/piper) — a neural TTS
-  that runs locally and is free — via `scripts/generate-voice.py`. No API key,
-  no per-play cost, no network round trip, and it works offline. An OpenAI
-  key (`gpt-4o-mini-tts`, voice `marin`) is an optional upgrade for warmer
-  audio and for speaking custom words, and any failure falls back to the
-  shipped recordings. A small disclosure notes the voice is AI-generated.
-  The game never falls back to `speechSynthesis` unless a grown-up opts in.
+- **A voice that just works.** Over 600 words ship as recorded audio in
+  `public/voice/` — every level word plus a wide "My Words" vocabulary
+  (common nouns, verbs, days, animals, first names) — all recorded once in
+  the same warm reading-teacher voice (OpenAI `gpt-4o-mini-tts`, voice
+  `marin`) and committed to the repo. The running game therefore needs **no
+  API key**, makes no API calls, costs nothing per play, and works offline.
+  A small disclosure notes the voice is AI-generated. `speechSynthesis` is
+  used only for unrecorded custom words, and only if a grown-up opts in.
 - **Gentle correction**: a wrong tap costs nothing. The word is replayed, the
   wrong card fades, after a second miss the right card glows, and the word
   quietly returns later in the trail for one friendly retry. Missed words are
@@ -46,9 +45,11 @@ no streaks to lose, no timers, no scarcity tricks, and nothing to buy.
 - **Homograph-safe audio**: ambiguous words carry pronunciation metadata —
   "read" is spoken *reed* (present tense), "live" as *liv* (verb) — so the
   audio, the displayed word, and scoring always agree.
-- **Custom words**: add up to 20 of your own (spelling lists, names). Words
-  are validated on the client and again on the server, and audio requests are
-  rate-limited.
+- **Custom words**: add up to 20 of your own (spelling lists, names). Each
+  word shows whether it already has a recording, and can be previewed with a
+  tap. Most common words and first names do; anything else can use the
+  device voice (opt-in) or an OpenAI key. Words are validated on the client
+  and again on the server, and audio requests are rate-limited.
 - **Versioned local saves**: the collection, unlocked levels, and practice
   memory live in `localStorage` under an explicit schema version with
   defensive migration — refreshing, reopening, or updating the game never
@@ -84,14 +85,29 @@ uses big touch targets, and fits an iPhone SE screen without scrolling.
 
 ## Regenerating the shipped voice
 
+The committed audio was generated once with the OpenAI Speech API. The key is
+read from the environment, used only by this script, and never stored:
+
+```bash
+OPENAI_API_KEY=sk-... node scripts/generate-voice-openai.mjs          # level words
+OPENAI_API_KEY=sk-... node scripts/generate-voice-openai.mjs --extra  # My Words vocabulary
+```
+
+Add words to `scripts/extra-vocabulary.txt` to widen what custom words can
+say. Existing files are skipped unless `--force` is passed.
+
+There is also a **no-key, no-cost** path using
+[Piper](https://github.com/rhasspy/piper), a neural TTS that runs locally —
+useful for regenerating audio without an API key:
+
 ```bash
 pip install piper-tts lameenc numpy
 # grab a voice from https://huggingface.co/rhasspy/piper-voices
 python3 scripts/generate-voice.py --voice en_US-amy-medium.onnx
+python3 scripts/generate-voice.py --voice en_US-amy-medium.onnx --extra
 ```
 
-Re-run after changing the word list or pronunciation metadata; a vitest check
-fails the build if any shipped word is missing its audio.
+Either way, a vitest check fails the build if a level word is missing audio.
 
 ## Configuring the API key (optional)
 
