@@ -1,21 +1,22 @@
 // Client audio manager for the voice.
 //
-// Sources, in order:
-//   1. The app's own /api/tts endpoint (OpenAI key stays server-side). Present
-//      on hosts with server functions; absent on static hosting.
-//   2. A grown-up's OpenAI key stored only in this device's localStorage,
-//      called directly against api.openai.com.
-//   3. This device's built-in speech voice — OFF by default, opt-in only from
-//      the Grown-Ups screen, because it sounds robotic. The game never falls
-//      back to it silently.
-// If none is available, playback reports a specific, calm error so the UI can
-// tell a grown-up exactly what to fix instead of just failing.
+// The 200 built-in words ship with pre-generated audio in public/voice (see
+// scripts/generate-voice.py), so the game speaks with no key, no cost, no
+// network round trip, and works offline. A grown-up's OpenAI key is an
+// optional upgrade: nicer audio for the built-in words, and the only way to
+// voice custom words. Sources, in order:
+//   1. A grown-up's OpenAI key (localStorage only, sent only to OpenAI), or
+//      the app's own /api/tts endpoint on hosts that have one.
+//   2. The pre-generated audio that ships with the game.
+//   3. This device's built-in speech voice — OFF by default, opt-in only,
+//      because it sounds robotic. The game never falls back to it silently.
+// Failures carry a specific reason so the UI can say what to fix.
 //
 // Audio is cached aggressively (in-memory object URLs + Cache Storage), the
 // next words are preloaded, and one shared <audio> element means a replay tap
 // cancels the previous playback instead of overlapping it.
 
-import { buildOpenAiSpeechRequest, isValidWord, ttsCacheKey } from "../../shared/tts";
+import { buildOpenAiSpeechRequest, isKnownWord, isValidWord, ttsCacheKey } from "../../shared/tts";
 
 export type AudioState = "idle" | "loading" | "playing" | "error";
 
@@ -221,30 +222,61 @@ export class WordAudio {
     }
   }
 
-  /** The app's own endpoint first, then the grown-up's own key. */
-  private async fetchAudio(word: string): Promise<Blob> {
-    if (this.serverEndpointAvailable !== false) {
-      try {
-        const res = await fetch("api/tts", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ word }),
-        });
-        const type = res.headers.get("Content-Type") ?? "";
-        if (res.ok && type.includes("audio")) {
-          this.serverEndpointAvailable = true;
-          return res.blob();
-        }
-        // A non-audio 200 means a static host served a fallback page.
-        this.serverEndpointAvailable = false;
-      } catch {
-        this.serverEndpointAvailable = false;
+  /** Audio that ships with the game — one file per built-in word. */
+  private async fetchBakedAudio(word: string): Promise<Blob> {
+    const url = `${import.meta.env.BASE_URL}voice/${word.toLowerCase()}.mp3`;
+    let res: Response;
+    try {
+      res = await fetch(url);
+    } catch {
+      throw new VoiceError("network");
+    }
+    if (!res.ok) throw new VoiceError("network", `baked ${res.status}`);
+    return res.blob();
+  }
+
+  /** The app's own endpoint, used only for words with no shipped audio. */
+  private async fetchFromServer(word: string): Promise<Blob | null> {
+    if (this.serverEndpointAvailable === false) return null;
+    try {
+      const res = await fetch("api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ word }),
+      });
+      const type = res.headers.get("Content-Type") ?? "";
+      if (res.ok && type.includes("audio")) {
+        this.serverEndpointAvailable = true;
+        return res.blob();
       }
+      // A non-audio 200 means a static host served a fallback page.
+      this.serverEndpointAvailable = false;
+    } catch {
+      this.serverEndpointAvailable = false;
+    }
+    return null;
+  }
+
+  private async fetchAudio(word: string): Promise<Blob> {
+    const parentKey = getParentVoiceKey();
+
+    if (isKnownWord(word)) {
+      // A configured key buys nicer audio, but shipped audio is the safety net:
+      // a rejected or rate-limited key must never stop the game from speaking.
+      if (parentKey) {
+        try {
+          return await fetchDirectFromOpenAi(word, parentKey);
+        } catch {
+          return this.fetchBakedAudio(word);
+        }
+      }
+      return this.fetchBakedAudio(word);
     }
 
-    const parentKey = getParentVoiceKey();
+    // Custom words have no shipped audio, so they need a live voice.
+    const fromServer = await this.fetchFromServer(word);
+    if (fromServer) return fromServer;
     if (parentKey) return fetchDirectFromOpenAi(word, parentKey);
-
     throw new VoiceError("no-voice-configured");
   }
 

@@ -30,11 +30,15 @@ no streaks to lose, no timers, no scarcity tricks, and nothing to buy.
   drawn as code (SVG) as placeholders until their art arrives, and painted
   ones are always offered first. Adding art is one line: drop the file in and
   pass it to the creature in `src/game/creatures.ts`.
-- **AI reading-teacher voice** via the server-side OpenAI Speech API
-  (`gpt-4o-mini-tts`, voice `marin`) — warm, lively, and clear, not
-  a robotic browser voice and not exaggerated preschool speech. A small
-  disclosure notes the voice is AI-generated. If audio fails, the game shows
-  a calm retry state; it never falls back to `speechSynthesis`.
+- **A voice that just works.** All 200 built-in words ship as recorded
+  audio in `public/voice/` (~730 KB total, one small mp3 per word),
+  synthesised with [Piper](https://github.com/rhasspy/piper) — a neural TTS
+  that runs locally and is free — via `scripts/generate-voice.py`. No API key,
+  no per-play cost, no network round trip, and it works offline. An OpenAI
+  key (`gpt-4o-mini-tts`, voice `marin`) is an optional upgrade for warmer
+  audio and for speaking custom words, and any failure falls back to the
+  shipped recordings. A small disclosure notes the voice is AI-generated.
+  The game never falls back to `speechSynthesis` unless a grown-up opts in.
 - **Gentle correction**: a wrong tap costs nothing. The word is replayed, the
   wrong card fades, after a second miss the right card glows, and the word
   quietly returns later in the trail for one friendly retry. Missed words are
@@ -69,8 +73,8 @@ npm test                             # logic tests (storage, collection, trails,
 npm run build                        # type-check + production build to dist/
 ```
 
-Without `OPENAI_API_KEY` the game runs fine but the speaker button shows its
-calm retry state instead of audio.
+No key is needed: without `OPENAI_API_KEY` the game speaks using the audio
+that ships in `public/voice/`.
 
 ## Playing on a phone
 
@@ -78,7 +82,21 @@ The game is phone-first: it installs to the home screen as a full-screen app
 (Share → Add to Home Screen on iOS), respects notches and reduced motion,
 uses big touch targets, and fits an iPhone SE screen without scrolling.
 
-## Configuring the API key (required for voice)
+## Regenerating the shipped voice
+
+```bash
+pip install piper-tts lameenc numpy
+# grab a voice from https://huggingface.co/rhasspy/piper-voices
+python3 scripts/generate-voice.py --voice en_US-amy-medium.onnx
+```
+
+Re-run after changing the word list or pronunciation metadata; a vitest check
+fails the build if any shipped word is missing its audio.
+
+## Configuring the API key (optional)
+
+The voice works without any key. A key only buys warmer audio for the
+built-in words and the ability to speak custom words.
 
 The OpenAI key is **server-side only**. It is read from the `OPENAI_API_KEY`
 environment variable by the `/api/tts` endpoint and never appears in client
@@ -119,6 +137,7 @@ pronunciation metadata.
 
 ```
 shared/        word lists + TTS contract (used by client, server, and tests)
+public/voice/  pre-generated audio, one mp3 per built-in word
 functions/     Cloudflare Pages Function: POST /api/tts
 server/        Vite dev middleware mirroring the production endpoint
 src/game/      storage (versioned saves), collection, trail, audio manager

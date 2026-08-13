@@ -24,7 +24,7 @@ interface Props {
 
 const FAILURE_TEXT: Record<AudioErrorKind, string> = {
   "no-voice-configured":
-    "No voice yet — paste an OpenAI key above, or switch on the device voice below.",
+    "Custom words need an OpenAI key (or the device voice below). The 200 built-in words always speak without one.",
   "key-rejected": "OpenAI rejected that key. Check it was copied whole, and that it's active.",
   "rate-limited": "OpenAI is rate-limiting this key right now. Wait a minute and test again.",
   network: "Couldn't reach OpenAI. Check the connection and try again.",
@@ -86,15 +86,24 @@ export function GrownUpsScreen({ onBack }: Props) {
     <Shell>
       <BackButton onClick={onBack} />
       <h1 className="mt-4 text-3xl font-extrabold text-center">Grown-Ups</h1>
-      <p className="mt-3 text-white/70">
-        Words are read aloud by an AI voice (OpenAI). If this game is hosted with
-        its own server key, it just works and you can ignore this page. On a
-        static host, paste an OpenAI API key below.
+      <div className="mt-4 rounded-2xl bg-white/10 p-5">
+        <p className="font-bold">🔊 The voice already works.</p>
+        <p className="mt-2 text-sm text-white/70">
+          All 200 built-in words ship with the game as recorded audio, made with
+          an AI voice. No key, no cost, no account — it even works offline.
+        </p>
+      </div>
+
+      <h2 className="mt-8 font-extrabold text-lg">Optional: your own OpenAI key</h2>
+      <p className="mt-2 text-white/70">
+        A key upgrades the built-in words to a warmer AI voice, and is the only
+        way to speak your own custom words.
       </p>
       <ul className="mt-3 text-sm text-white/60 list-disc pl-5 space-y-1">
         <li>The key is stored only on this device (localStorage).</li>
         <li>It is sent only to api.openai.com to generate word audio.</li>
         <li>Each word costs a fraction of a cent and is cached after the first play.</li>
+        <li>If a key ever fails, the game falls back to its built-in audio.</li>
       </ul>
 
       {hasKey ? (
@@ -141,11 +150,11 @@ export function GrownUpsScreen({ onBack }: Props) {
 
       {deviceVoiceSupported() && (
         <div className="mt-8 rounded-2xl bg-white/5 p-5">
-          <h2 className="font-extrabold text-lg">No key handy?</h2>
+          <h2 className="font-extrabold text-lg">Custom words without a key</h2>
           <p className="mt-2 text-sm text-white/60">
-            This device has a built-in speech voice. It sounds robotic next to
-            the AI voice, so it stays off unless you choose it — but it makes
-            the game fully playable right now, with no key and no cost.
+            Your own words have no recorded audio. This device's built-in speech
+            voice can read them instead. It sounds robotic, so it stays off
+            unless you choose it.
           </p>
           <BigButton
             variant={deviceVoice ? "primary" : "ghost"}
