@@ -92,6 +92,7 @@ export function App() {
           onWordSeen={recordWordSeen}
           onComplete={() => handleTrailComplete(screen.levelId, screen.creature)}
           onExit={goHome}
+          onGrownUps={() => setScreen({ kind: "grownups" })}
         />
       );
     case "hatch":

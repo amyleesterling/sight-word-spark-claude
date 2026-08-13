@@ -23,6 +23,7 @@ interface Props {
   onWordSeen: (word: string, missed: boolean) => void;
   onComplete: () => void;
   onExit: () => void;
+  onGrownUps: () => void;
 }
 
 const CELEBRATE_MS = 950;
@@ -35,6 +36,7 @@ export function PlayScreen({
   onWordSeen,
   onComplete,
   onExit,
+  onGrownUps,
 }: Props) {
   const reducedMotion = useReducedMotion();
   const [rounds, setRounds] = useState<TrailRound[]>(() =>
@@ -159,7 +161,7 @@ export function PlayScreen({
         </div>
 
         <div className="flex justify-center mt-3">
-          <SpeakerButton word={round.word.word} />
+          <SpeakerButton word={round.word.word} onGrownUps={onGrownUps} />
         </div>
 
         <p className="text-center mt-4 text-lg text-white/75 min-h-[28px]" aria-live="polite">

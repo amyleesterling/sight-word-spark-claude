@@ -1,56 +1,104 @@
-// Client audio manager for the AI voice.
+// Client audio manager for the voice.
 //
-// - Fetches mp3s from the protected /api/tts endpoint (the key stays server-side).
-// - Caches aggressively: in-memory object URLs + the Cache Storage API so a
-//   word is fetched at most once per device per cache version.
-// - Preloads upcoming words while the current round plays.
-// - One shared <audio> element: replay taps cancel the previous playback
-//   instead of overlapping, and iOS Safari keeps allowing programmatic play
-//   once the element has been unlocked inside a real tap.
-// - On failure it reports a calm, retryable error state. There is deliberately
-//   no window.speechSynthesis fallback.
+// Sources, in order:
+//   1. The app's own /api/tts endpoint (OpenAI key stays server-side). Present
+//      on hosts with server functions; absent on static hosting.
+//   2. A grown-up's OpenAI key stored only in this device's localStorage,
+//      called directly against api.openai.com.
+//   3. This device's built-in speech voice — OFF by default, opt-in only from
+//      the Grown-Ups screen, because it sounds robotic. The game never falls
+//      back to it silently.
+// If none is available, playback reports a specific, calm error so the UI can
+// tell a grown-up exactly what to fix instead of just failing.
+//
+// Audio is cached aggressively (in-memory object URLs + Cache Storage), the
+// next words are preloaded, and one shared <audio> element means a replay tap
+// cancels the previous playback instead of overlapping it.
 
 import { buildOpenAiSpeechRequest, isValidWord, ttsCacheKey } from "../../shared/tts";
 
 export type AudioState = "idle" | "loading" | "playing" | "error";
 
+/** Why playback failed — drives what the UI offers next. */
+export type AudioErrorKind =
+  | "no-voice-configured"
+  | "key-rejected"
+  | "rate-limited"
+  | "network"
+  | "unknown";
+
 const CACHE_NAME = "sight-word-spark-tts";
-
-// On static hosting (no /api/tts server), a grown-up can paste their own
-// OpenAI key on the Grown-Ups screen. It is stored ONLY in this device's
-// localStorage and sent ONLY to api.openai.com — never to any other server,
-// never bundled in code, never synced anywhere.
 const PARENT_KEY_STORAGE = "sight-word-spark:parent-voice-key";
+const DEVICE_VOICE_STORAGE = "sight-word-spark:device-voice";
 
-export function getParentVoiceKey(): string | null {
+function readStorage(key: string): string | null {
   try {
-    return localStorage.getItem(PARENT_KEY_STORAGE);
+    return localStorage.getItem(key);
   } catch {
     return null;
   }
 }
 
-export function setParentVoiceKey(key: string | null): void {
+function writeStorage(key: string, value: string | null): void {
   try {
-    if (key) localStorage.setItem(PARENT_KEY_STORAGE, key);
-    else localStorage.removeItem(PARENT_KEY_STORAGE);
+    if (value === null) localStorage.removeItem(key);
+    else localStorage.setItem(key, value);
   } catch {
-    // storage unavailable — the key just won't persist
+    // storage unavailable (private mode) — setting just won't persist
   }
 }
 
-/** Fetch audio straight from OpenAI with the device-local parent key. */
+export function getParentVoiceKey(): string | null {
+  return readStorage(PARENT_KEY_STORAGE);
+}
+
+export function setParentVoiceKey(key: string | null): void {
+  writeStorage(PARENT_KEY_STORAGE, key);
+}
+
+/** Opt-in only: the device's own robotic voice, as a clearly-labelled stopgap. */
+export function getDeviceVoiceEnabled(): boolean {
+  return readStorage(DEVICE_VOICE_STORAGE) === "on";
+}
+
+export function setDeviceVoiceEnabled(enabled: boolean): void {
+  writeStorage(DEVICE_VOICE_STORAGE, enabled ? "on" : null);
+}
+
+export function deviceVoiceSupported(): boolean {
+  return typeof window !== "undefined" && "speechSynthesis" in window;
+}
+
+/** Error carrying a machine-readable reason. */
+class VoiceError extends Error {
+  constructor(readonly kind: AudioErrorKind, message?: string) {
+    super(message ?? kind);
+  }
+}
+
+function kindForStatus(status: number): AudioErrorKind {
+  if (status === 401 || status === 403) return "key-rejected";
+  if (status === 429) return "rate-limited";
+  return "unknown";
+}
+
+/** Fetch audio straight from OpenAI with the device-local grown-up key. */
 async function fetchDirectFromOpenAi(word: string, key: string): Promise<Blob> {
-  if (!isValidWord(word)) throw new Error("invalid word");
-  const res = await fetch("https://api.openai.com/v1/audio/speech", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(buildOpenAiSpeechRequest(word)),
-  });
-  if (!res.ok) throw new Error(`openai ${res.status}`);
+  if (!isValidWord(word)) throw new VoiceError("unknown", "invalid word");
+  let res: Response;
+  try {
+    res = await fetch("https://api.openai.com/v1/audio/speech", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(buildOpenAiSpeechRequest(word)),
+    });
+  } catch {
+    throw new VoiceError("network");
+  }
+  if (!res.ok) throw new VoiceError(kindForStatus(res.status), `openai ${res.status}`);
   return res.blob();
 }
 
@@ -66,6 +114,9 @@ export class WordAudio {
   private listeners = new Set<(state: AudioState) => void>();
   private state: AudioState = "idle";
   private unlocked = false;
+  private errorKind: AudioErrorKind = "unknown";
+  /** null until the app endpoint has been probed once. */
+  private serverEndpointAvailable: boolean | null = null;
 
   onStateChange(listener: (state: AudioState) => void): () => void {
     this.listeners.add(listener);
@@ -76,6 +127,10 @@ export class WordAudio {
 
   getState(): AudioState {
     return this.state;
+  }
+
+  getErrorKind(): AudioErrorKind {
+    return this.errorKind;
   }
 
   private setState(state: AudioState) {
@@ -138,22 +193,8 @@ export class WordAudio {
         }
       }
 
-      // 2. Network: the app's own endpoint first (key stays on the server);
-      //    on static hosting fall back to the device-local parent key.
       if (!blob) {
-        try {
-          const res = await fetch("api/tts", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ word }),
-          });
-          if (!res.ok) throw new Error(`tts ${res.status}`);
-          blob = await res.blob();
-        } catch (err) {
-          const parentKey = getParentVoiceKey();
-          if (!parentKey) throw err;
-          blob = await fetchDirectFromOpenAi(word, parentKey);
-        }
+        blob = await this.fetchAudio(word);
         if (typeof caches !== "undefined") {
           try {
             const cache = await caches.open(CACHE_NAME);
@@ -180,11 +221,52 @@ export class WordAudio {
     }
   }
 
-  /** Warm the cache for an upcoming word without playing it. */
-  preload(word: string): void {
-    this.ensureAudio(word).catch(() => {
-      // Preload failures are silent; play() will surface a retryable error.
-    });
+  /** The app's own endpoint first, then the grown-up's own key. */
+  private async fetchAudio(word: string): Promise<Blob> {
+    if (this.serverEndpointAvailable !== false) {
+      try {
+        const res = await fetch("api/tts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ word }),
+        });
+        const type = res.headers.get("Content-Type") ?? "";
+        if (res.ok && type.includes("audio")) {
+          this.serverEndpointAvailable = true;
+          return res.blob();
+        }
+        // A non-audio 200 means a static host served a fallback page.
+        this.serverEndpointAvailable = false;
+      } catch {
+        this.serverEndpointAvailable = false;
+      }
+    }
+
+    const parentKey = getParentVoiceKey();
+    if (parentKey) return fetchDirectFromOpenAi(word, parentKey);
+
+    throw new VoiceError("no-voice-configured");
+  }
+
+  /** Speak with the device's built-in voice (opt-in stopgap only). */
+  private speakWithDeviceVoice(word: string): boolean {
+    if (!deviceVoiceSupported()) return false;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(word);
+      utterance.rate = 0.85;
+      utterance.pitch = 1.05;
+      const preferred = window.speechSynthesis
+        .getVoices()
+        .find((v) => /en-US|en_GB|en-GB/.test(v.lang) && /Samantha|Karen|Daniel|Google US/.test(v.name));
+      if (preferred) utterance.voice = preferred;
+      utterance.addEventListener("end", () => this.setState("idle"));
+      this.setState("playing");
+      window.speechSynthesis.speak(utterance);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /**
@@ -195,13 +277,18 @@ export class WordAudio {
     const token = ++this.playToken;
     const el = this.getElement();
     el.pause();
+    if (deviceVoiceSupported()) window.speechSynthesis.cancel();
     this.setState("loading");
 
     let url: string;
     try {
       url = await this.ensureAudio(word);
-    } catch {
-      if (token === this.playToken) this.setState("error");
+    } catch (err) {
+      if (token !== this.playToken) return;
+      // Only reach for the device voice when a grown-up has opted in.
+      if (getDeviceVoiceEnabled() && this.speakWithDeviceVoice(word)) return;
+      this.errorKind = err instanceof VoiceError ? err.kind : "unknown";
+      this.setState("error");
       return;
     }
     if (token !== this.playToken) return; // superseded by a newer play()
@@ -214,15 +301,45 @@ export class WordAudio {
     } catch (err) {
       // AbortError just means a newer play() took over — not a real failure.
       if (token === this.playToken && (err as DOMException)?.name !== "AbortError") {
+        this.errorKind = "unknown";
         this.setState("error");
       }
     }
   }
 
+  /** Warm the cache for an upcoming word without playing it. */
+  preload(word: string): void {
+    this.ensureAudio(word).catch(() => {
+      // Preload failures are silent; play() surfaces the real state.
+    });
+  }
+
   stop(): void {
     this.playToken++;
     this.element?.pause();
+    if (deviceVoiceSupported()) window.speechSynthesis.cancel();
     this.setState("idle");
+  }
+
+  /** Forget the cached probe + audio after voice settings change. */
+  resetSources(): void {
+    this.serverEndpointAvailable = null;
+    this.objectUrls.forEach((url) => URL.revokeObjectURL(url));
+    this.objectUrls.clear();
+  }
+
+  /**
+   * Grown-Ups diagnostic: try one real word and report precisely what happened.
+   */
+  async testVoice(word = "the"): Promise<{ ok: boolean; kind?: AudioErrorKind }> {
+    this.resetSources();
+    try {
+      await this.ensureAudio(word);
+      await this.play(word);
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, kind: err instanceof VoiceError ? err.kind : "unknown" };
+    }
   }
 }
 
