@@ -2,9 +2,19 @@
 // set 2 ("Shimmer Sky") opens once every Grove creature has been discovered, so
 // there is no duplicate hatch until the whole first collection is complete.
 
-import twigArt from "../assets/creatures/twig.webp";
+import bloomArt from "../assets/creatures/bloom.webp";
+import boulderArt from "../assets/creatures/boulder.webp";
+import cometArt from "../assets/creatures/comet.webp";
+import doodleArt from "../assets/creatures/doodle.webp";
+import emberlyArt from "../assets/creatures/emberly.webp";
+import glimmerArt from "../assets/creatures/glimmer.webp";
+import mintyArt from "../assets/creatures/minty.webp";
+import nimbusArt from "../assets/creatures/nimbus.webp";
 import pebbleArt from "../assets/creatures/pebble.webp";
 import puddleArt from "../assets/creatures/puddle.webp";
+import sunnyArt from "../assets/creatures/sunny.webp";
+import twigArt from "../assets/creatures/twig.webp";
+import wafflesArt from "../assets/creatures/waffles.webp";
 import zippyArt from "../assets/creatures/zippy.webp";
 
 export type BodyKind =
@@ -67,51 +77,51 @@ const c = (
 ): CreatureSpec => ({ id, name, species, set, body, feature, palette, egg, image });
 
 export const CREATURES: CreatureSpec[] = [
-  // ----- Set 1: Hatchling Grove -----
-  c("emberly", "Emberly", "the Spark Fox", 1, "fox", "flame",
-    { body: "#ff8a5c", belly: "#ffe3c2", accent: "#ff5c39", cheek: "#ffb199" },
-    { shell: "#ffd9a0", speckle: "#ff8a5c" }),
+  // ----- Set 1: Hatchling Grove — every creature painted -----
+  c("emberly", "Emberly", "the Starfire Fox", 1, "fox", "star",
+    { body: "#fdf3e4", belly: "#fffaf2", accent: "#f2a15c", cheek: "#ffd2c2" },
+    { shell: "#f9dcd6", speckle: "#e3b055" }, emberlyArt),
   c("puddle", "Puddle", "the Axolotl", 1, "blob", "antenna",
     { body: "#f7a8b0", belly: "#ffe6e4", accent: "#e8677f", cheek: "#ffc4c8" },
     { shell: "#f7efe2", speckle: "#dcc39b" }, puddleArt),
-  c("bloom", "Bloom", "the Petal Bunny", 1, "bunny", "leaf",
-    { body: "#ff9ec8", belly: "#ffe8f2", accent: "#e0619b", cheek: "#ffc2dc" },
-    { shell: "#ffe0ee", speckle: "#ff9ec8" }),
-  c("comet", "Comet", "the Star Pup", 1, "fox", "star",
-    { body: "#8f8aff", belly: "#e6e4ff", accent: "#5c54e8", cheek: "#c0bcff" },
-    { shell: "#dcdaff", speckle: "#8f8aff" }),
+  c("bloom", "Bloom", "the Jackalope", 1, "bunny", "horn",
+    { body: "#b98a63", belly: "#f0dcc8", accent: "#8a5f3d", cheek: "#f2b8a8" },
+    { shell: "#f2d7c2", speckle: "#c2825a" }, bloomArt),
+  c("comet", "Comet", "the Rainbow Unicorn", 1, "bunny", "wings",
+    { body: "#ffffff", belly: "#f4f7ff", accent: "#8fd0f2", cheek: "#ffc6d8" },
+    { shell: "#8ccdf2", speckle: "#ffffff" }, cometArt),
   c("glimmer", "Glimmer", "the Moon Moth", 1, "blob", "wings",
-    { body: "#b8e2b0", belly: "#eefbe9", accent: "#6cae61", cheek: "#d6f0cf" },
-    { shell: "#e4f6de", speckle: "#8fc985" }),
+    { body: "#f6f2fb", belly: "#fffdff", accent: "#a98cd8", cheek: "#e0d0f2" },
+    { shell: "#b79ad8", speckle: "#eae2f5" }, glimmerArt),
   c("pebble", "Pebble", "the Star Turtle", 1, "turtle", "star",
     { body: "#5ecfc4", belly: "#f0f3d8", accent: "#2b3f8f", cheek: "#ffb3b3" },
     { shell: "#e8e2f7", speckle: "#c9bce8" }, pebbleArt),
   c("zippy", "Zippy", "the Baby Griffin", 1, "bird", "wings",
     { body: "#f5c624", belly: "#fff6e0", accent: "#e09a1e", cheek: "#ffe0a8" },
     { shell: "#f5eddc", speckle: "#b09a7a" }, zippyArt),
-  c("minty", "Minty", "the Frost Kit", 1, "cat", "crystal",
-    { body: "#8fe6d9", belly: "#e4fbf7", accent: "#3fbfa9", cheek: "#c2f2ea" },
-    { shell: "#d8f8f2", speckle: "#8fe6d9" }),
-  c("doodle", "Doodle", "the Ink Octo", 1, "octo", "none",
-    { body: "#c78fe6", belly: "#f3e6fb", accent: "#9955c8", cheek: "#e0c2f2" },
-    { shell: "#eedcf8", speckle: "#c78fe6" }),
-  c("waffles", "Waffles", "the Cloud Cat", 1, "cat", "wings",
-    { body: "#ffc79e", belly: "#fff1e4", accent: "#e89a5c", cheek: "#ffdec4" },
-    { shell: "#ffe9d6", speckle: "#ffc79e" }),
+  c("minty", "Minty", "the Stegosaurus", 1, "dragon", "none",
+    { body: "#3fc7c0", belly: "#dff5e0", accent: "#f2803c", cheek: "#7fe0d8" },
+    { shell: "#f7e6a8", speckle: "#4ec9c0" }, mintyArt),
+  c("doodle", "Doodle", "the Narwhal", 1, "blob", "horn",
+    { body: "#7b8ae8", belly: "#eef2ff", accent: "#4a5bc0", cheek: "#b8c4f5" },
+    { shell: "#a8e6d8", speckle: "#f2f2f7" }, doodleArt),
+  c("waffles", "Waffles", "the Red Panda", 1, "cat", "none",
+    { body: "#e0602a", belly: "#fff0e2", accent: "#8a4a2a", cheek: "#ffd0b0" },
+    { shell: "#d2e8c0", speckle: "#e05a2a" }, wafflesArt),
   c("twig", "Twig", "the Forest Dragon", 1, "dragon", "leaf",
     { body: "#8fce7a", belly: "#e8f8e0", accent: "#f2846a", cheek: "#c0e8b0" },
     { shell: "#f2efe0", speckle: "#bcd9a8" }, twigArt),
-  c("sunny", "Sunny", "the Dawn Bird", 1, "bird", "none",
-    { body: "#ff9e7a", belly: "#ffe9de", accent: "#e86a3f", cheek: "#ffc7b0" },
-    { shell: "#ffe2d4", speckle: "#ff9e7a" }),
+  c("sunny", "Sunny", "the Phoenix", 1, "bird", "flame",
+    { body: "#f5622a", belly: "#ffe8a8", accent: "#ffc21e", cheek: "#ffb08a" },
+    { shell: "#f9f0d8", speckle: "#e0b13a" }, sunnyArt),
 
   // ----- Set 2: Shimmer Sky -----
   c("aurora", "Aurora", "the Sky Fox", 2, "fox", "wings",
     { body: "#7ad4e6", belly: "#e2f8fd", accent: "#3aa5c0", cheek: "#b5e9f4" },
     { shell: "#d3f2f9", speckle: "#7ad4e6" }),
-  c("nimbus", "Nimbus", "the Storm Sprite", 2, "blob", "star",
-    { body: "#a5aede", belly: "#eceefb", accent: "#6b77c4", cheek: "#cdd2f0" },
-    { shell: "#e2e5f8", speckle: "#a5aede" }),
+  c("nimbus", "Nimbus", "the Storm Dragon", 2, "dragon", "wings",
+    { body: "#4ec8d8", belly: "#f0f6f2", accent: "#9a86e0", cheek: "#a8e8f0" },
+    { shell: "#dcedf8", speckle: "#4aa8e0" }, nimbusArt),
   c("clover", "Clover", "the Lucky Bunny", 2, "bunny", "star",
     { body: "#a8dc8f", belly: "#edfae4", accent: "#6cb04c", cheek: "#cdeebb" },
     { shell: "#e3f5d8", speckle: "#a8dc8f" }),
@@ -121,9 +131,9 @@ export const CREATURES: CreatureSpec[] = [
   c("lumen", "Lumen", "the Firefly Moth", 2, "blob", "antenna",
     { body: "#ffe08a", belly: "#fff8e2", accent: "#e0b23a", cheek: "#ffedb5" },
     { shell: "#fff3cd", speckle: "#ffe08a" }),
-  c("boulder", "Boulder", "the Mountain Turtle", 2, "turtle", "leaf",
-    { body: "#c4a98a", belly: "#f2ebe2", accent: "#96795a", cheek: "#e0cfba" },
-    { shell: "#ece2d4", speckle: "#c4a98a" }),
+  c("boulder", "Boulder", "the Triceratops", 2, "dragon", "horn",
+    { body: "#7cc04a", belly: "#e8f2c8", accent: "#f2825c", cheek: "#b8e08a" },
+    { shell: "#f0e8d4", speckle: "#a8c090" }, boulderArt),
   c("piper", "Piper", "the Song Chick", 2, "bird", "antenna",
     { body: "#f7b2e0", belly: "#fdeaf7", accent: "#d670b5", cheek: "#fbd3ee" },
     { shell: "#fce2f3", speckle: "#f7b2e0" }),
