@@ -30,14 +30,28 @@ jobs:
       - run: npm ci
       - run: npm run build
       - name: Publish dist/ to gh-pages
+        # Copies the build over the existing branch WITHOUT deleting what is
+        # already there. Old content-hashed assets are deliberately kept so a
+        # CDN still serving a cached index.html can load the files it refers
+        # to, instead of showing a blank page until its cache expires.
         run: |
-          touch dist/.nojekyll
-          cd dist
-          git init -q -b gh-pages
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          remote="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          rm -rf .deploy
+          if git ls-remote --exit-code --heads "$remote" gh-pages >/dev/null 2>&1; then
+            git clone -q --depth 1 --branch gh-pages "$remote" .deploy
+          else
+            git clone -q --depth 1 "$remote" .deploy
+            git -C .deploy checkout -q --orphan gh-pages
+            git -C .deploy rm -rq --cached . || true
+            find .deploy -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          fi
+          cp -a dist/. .deploy/
+          touch .deploy/.nojekyll
+          cd .deploy
           git add -A
-          git commit -q -m "Deploy ${GITHUB_SHA::7}"
-          git push -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
+          git commit -q -m "Deploy ${GITHUB_SHA::7}" || { echo "nothing to deploy"; exit 0; }
+          git push -q origin gh-pages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
