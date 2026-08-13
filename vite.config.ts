@@ -13,6 +13,18 @@ export default defineConfig({
   build: {
     outDir: "dist",
     sourcemap: false,
+    rollupOptions: {
+      output: {
+        // Stable filenames, deliberately not content-hashed. The game is served
+        // through CDNs that can hold a cached index.html after a deploy; with
+        // hashed names that stale HTML points at a file that no longer exists
+        // and the page goes blank. With stable names it simply loads the newer
+        // bundle instead.
+        entryFileNames: "assets/[name].js",
+        chunkFileNames: "assets/[name].js",
+        assetFileNames: "assets/[name][extname]",
+      },
+    },
   },
   test: {
     environment: "node",
